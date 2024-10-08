@@ -29,3 +29,20 @@ The server folder contains a node.js server using [express](https://expressjs.co
 The application should connect to the default server port (3042) automatically! 
 
 _Hint_ - Use [nodemon](https://www.npmjs.com/package/nodemon) instead of `node` to automatically restart the server on any changes.
+
+
+### Note
+```
+toHex(keccak256(Buffer.from(msg)))
+```
+This method returns exact same hash (and utf8 array, assuming the removal of `toHex` wrapper) as the following one
+```
+const hashMessage = (msg) => {
+  const splitMessage = utf8ToBytes(msg)
+  let hashedMessage = keccak256(splitMessage)
+
+  hashedMessage = toHex(hashedMessage)
+
+  return hashedMessage
+}
+```
