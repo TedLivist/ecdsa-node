@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 3042;
-const { verifySignature } = require("./utils")
+const { recoverPublicKey } = require("./utils")
 
 app.use(cors());
 app.use(express.json());
@@ -20,25 +20,25 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount, signature, message } = req.body;
+
+  // refactored the send action to derive the address from the signature
+  // instead of having the client-side send that
+  // it can be maliciously to use the sender address from the client-side
+
+  const { signature, message, recipient, amount } = req.body;
+
+  const sender = recoverPublicKey(message, signature)
 
   setInitialBalance(sender);
   setInitialBalance(recipient);
 
-  // verify that the signed message was signed by the tx sender
-  const isSigned = verifySignature(message, signature, sender, amount)
-
-  // if verified run transfer the funds or label as impostor
-  if (isSigned == true) {
-    if (balances[sender] < amount) {
-      res.status(400).send({ message: "Not enough funds!" });
-    } else {
-      balances[sender] -= amount;
-      balances[recipient] += amount;
-      res.send({ balance: balances[sender] });
-    }
+  
+  if (balances[sender] < amount) {
+    res.status(400).send({ message: "Not enough funds!" });
   } else {
-    res.status(400).send({ message: "Impostor! Get him!!" })
+    balances[sender] -= amount;
+    balances[recipient] += amount;
+    res.send({ balance: balances[sender] });
   }
 });
 
